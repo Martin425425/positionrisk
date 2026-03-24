@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>专业仓位风险计算器（原功能完整保留）</title>
+<style>
+*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+body{margin:0;padding:20px;background:#f5f7fa;color:#1f2937}
+.container{max-width:700px;margin:0 auto;background:#fff;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.06);padding:28px}
+h1{font-size:24px;margin-bottom:24px;font-weight:600;text-align:center}
+.section{margin-bottom:24px}
+.section h2{font-size:16px;color:#4b5563;margin-bottom:12px;font-weight:500}
+.form-row{display:flex;gap:12px;margin-bottom:12px;}
+.form-item{flex:1;display:flex;flex-direction:column;}
+.form-item label{font-size:13px;color:#6b7280;margin-bottom:6px;font-weight:500;}
+input{width:100%;padding:12px 14px;border:1px solid #d1d5db;border-radius:12px;font-size:15px;}
+input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,0.2);}
+.btn{background:#2563eb;color:white;border:none;padding:14px;border-radius:12px;font-size:16px;width:100%;cursor:pointer;margin-top:8px;font-weight:600;}
+.btn:hover{background:#1d4ed8;}
+.tip{font-size:12px;color:#6b7280;margin-top:4px;}
+.suggest{color:#2563eb;font-size:12px;}
+.result-container { margin-top: 20px; }
+.result-cards { 
+  display: flex; 
+  gap: 10px; 
+  margin-bottom: 20px; 
+  width: 100%;
+}
+.card { 
+  flex: 1 1 0%; 
+  min-width: 0; 
+  background: #f8f9fa; 
+  border-radius: 16px; 
+  padding: 16px 8px; 
+  text-align: center; 
+  border: 1px solid #e9ecef; 
+}
+.card.purple { border-color:#a855f7; background:#faf5ff; }
+.card.green { border-color:#22c55e; background:#f0fdf4; }
+.card.blue { border-color:#3b82f6; background:#eff6ff; }
+.card-title { font-size:12px; color:#6b7280;margin-bottom:4px; }
+.card-value { 
+  font-size:clamp(12px, 2vw, 14px);
+  font-weight:700; 
+  color:#1f2937; 
+  white-space:nowrap;
+}
+.card-sub { font-size:11px; color:#6b7280;margin-top:2px; }
+.detail-card { 
+  border-radius:16px; 
+  padding:16px; 
+  margin-bottom:12px; 
+  border:1px solid #e9ecef; 
+}
+.detail-card.orange { 
+  background:#fffbeb; 
+  border-color:#f59e0b; 
+}
+.detail-card.red { 
+  background:#fef2f2; 
+  border-color:#ef4444; 
+}
+.detail-card.blue { 
+  background:#eff6ff; 
+  border-color:#3b82f6; 
+}
+.detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.detail-title { font-size:15px;font-weight:600;color:#1f2937; }
+.detail-badge {
+  display:inline-block;
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:11px;
+  font-weight:600;
+  margin-left:6px;
+}
+.badge-orange { background:#fef3c7; color:#d97706; }
+.badge-red { background:#fee2e2; color:#dc2626; }
+.badge-blue { background:#dbeafe; color:#2563eb; }
+.detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9; }
+.detail-row:last-child { border-bottom:none; }
+.detail-label { font-size:14px;color:#6b7280; }
+.detail-val { 
+  font-size:15px; 
+  font-weight:600; 
+  color:#1f2937; 
+  white-space:nowrap;
+}
+.detail-val.red { color:#ef4444; }
+.detail-val.blue { color:#2563eb; }
+.result-detail { background:#fff;border-radius:16px;padding:16px;border:1px solid #e9ecef; }
+
+.risk-result-card {
+  background:#f0fdf4;
+  border:1px solid #16a34a;
+  padding:16px;
+  border-radius:16px;
+  margin-top:16px;
+}
+.monte-row {
+  display:flex;
+  justify-content:space-between;
+  padding:6px 0;
+  font-size:14px;
+}
+/* 加鼠标手型 */
+.monte-row span:last-child {
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.monte-row span:last-child:hover {
+  background: #e2e8f0;
+}
+.btn-risk { background:#0ea5e9; }
+.btn-apply { background:#16a34a; margin-top:12px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>仓位风险计算器</h1>
+
+<div class="section">
+  <h2>基础参数</h2>
+  <div class="form-item" style="margin-bottom:12px">
+    <label>账户总资金</label>
+    <input type="number" id="totalFund" value="1000000">
+  </div>
+  <div class="form-row">
+    <div class="form-item">
+      <label>单笔最大风险 % <span class="suggest">(建议 0.25% ~ 4%)</span></label>
+      <input type="number" id="riskPercent" value="1" step="0.01">
+    </div>
+    <div class="form-item">
+      <label>资金利用率上限 (%)</label>
+      <input type="number" id="maxUseRate" value="100" min="10" max="100">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-item">
+      <label>开仓价格</label>
+      <input type="number" id="entry" value="100">
+    </div>
+    <div class="form-item">
+      <label>止损价格</label>
+      <input type="number" id="stop" value="97">
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>盈亏比设置（可自定义）</h2>
+  <div class="form-row">
+    <div class="form-item">
+      <label>脱离成本区盈亏比</label>
+      <input type="number" id="rrSafe" value="5" step="0.1">
+      <div class="tip">达到此比例即可保本</div>
+    </div>
+    <div class="form-item">
+      <label>目标价盈亏比</label>
+      <input type="number" id="rrTarget" value="10" step="0.1">
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>盈利保护（回撤止盈）</h2>
+  <div class="form-item">
+    <label>利润回撤保护 %</label>
+    <input type="number" id="trailPercent" value="20">
+    <div class="tip">达到目标后，利润回撤此比例即止盈</div>
+  </div>
+</div>
+
+<button class="btn" onclick="calc()">⚡ 计算仓位数据</button>
+
+<div class="result-container" id="resultArea" style="display:none">
+  <div class="result-cards">
+    <div class="card purple">
+      <div class="card-title">开仓总金额</div>
+      <div class="card-value" id="res-cost">¥0.00</div>
+    </div>
+    <div class="card green">
+      <div class="card-title">开仓股数</div>
+      <div class="card-value" id="res-size">0</div>
+      <div class="card-sub">已自动调整为整数</div>
+    </div>
+    <div class="card blue">
+      <div class="card-title">实际风险金额</div>
+      <div class="card-value" id="res-risk">¥0.00</div>
+      <div class="card-sub">占账户 <span id="res-risk-percent">0%</span></div>
+    </div>
+  </div>
+
+  <div class="detail-card orange">
+    <div class="detail-header">
+      <div class="detail-title">脱离成本区 <span class="detail-badge badge-orange" id="res-safe-badge">5:1</span></div>
+    </div>
+    <div class="detail-row"><span class="detail-label">目标价格</span><span class="detail-val" id="res-safe-price">¥0.00</span></div>
+    <div class="detail-row"><span class="detail-label">目标涨幅</span><span class="detail-val red" id="res-safe-change">+0.00%</span></div>
+  </div>
+
+  <div class="detail-card red">
+    <div class="detail-header">
+      <div class="detail-title">目标收益点位 <span class="detail-badge badge-red" id="res-target-badge">10:1</span></div>
+    </div>
+    <div class="detail-row"><span class="detail-label">目标价格</span><span class="detail-val" id="res-target-price">¥0.00</span></div>
+    <div class="detail-row"><span class="detail-label">预期收益</span><span class="detail-val red" id="res-target-profit">¥0.00</span></div>
+    <div class="detail-row"><span class="detail-label">上涨空间</span><span class="detail-val red" id="res-target-change">+0.00%</span></div>
+  </div>
+
+  <div class="detail-card blue">
+    <div class="detail-header">
+      <div class="detail-title">利润保护 <span class="detail-badge badge-blue" id="res-trail-badge">20%</span></div>
+    </div>
+    <div class="detail-row"><span class="detail-label">保护价格</span><span class="detail-val" id="res-trail-price">¥0.00</span></div>
+    <div class="detail-row"><span class="detail-label">锁定利润</span><span class="detail-val red" id="res-trail-profit">¥0.00</span></div>
+    <div class="detail-row"><span class="detail-label">锁定利润比例</span><span class="detail-val red" id="res-lock-percent">0%</span></div>
+  </div>
+
+  <div class="result-detail">
+    <div class="detail-row"><span class="detail-label">每股风险</span><span class="detail-val" id="res-unit-risk">¥0.00</span></div>
+    <div class="detail-row"><span class="detail-label">止损幅度</span><span class="detail-val red" id="res-stop-ampl">-0.00%</span></div>
+    <div class="detail-row"><span class="detail-label">资金利用率</span><span class="detail-val blue" id="res-util">0.00%</span></div>
+  </div>
+</div>
+
+<!-- 🔥 逆向风控推算引擎（双重约束） -->
+<div class="section" style="margin-top:32px;">
+  <h2>🧠 逆向风控推算引擎（双重约束）</h2>
+  <div class="form-row">
+    <div class="form-item"><label>年交易笔数</label><input type="number" id="tradeCount" value="60"></div>
+    <div class="form-item"><label>可容忍最大回撤 %</label><input type="number" id="maxDrawdown" value="20"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-item"><label>目标年化收益 % ≥</label><input type="number" id="targetYearReturn" value="50"></div>
+    <div class="form-item"><label>交易胜率 %</label><input type="number" id="winRate" value="30"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-item"><label>盈亏比</label><input type="number" id="rrRisk" value="6" step="0.1"></div>
+    <div class="form-item" style="visibility:hidden;"></div>
+  </div>
+  <button class="btn btn-risk" onclick="runSmartRisk()">🚀 运行逆向风控计算</button>
+
+  <div id="riskResult" style="display:none; margin-top:16px;">
+    <div class="risk-result-card">
+      <div class="monte-row">
+        <span>🎯 1/12 凯利保守风险</span>
+        <span id="kellySuggest" onclick="applyRisk()" style="font-weight:600;color:#16a34a;">0%</span>
+      </div>
+      <div class="monte-row">
+        <span>📉 回撤≤20% 允许最大仓位</span>
+        <span id="maxSafeRisk" onclick="applyMaxRisk()" style="font-weight:600;color:#ef4444;">0%</span>
+      </div>
+      <div class="monte-row">
+        <span>📈 达成目标需最低仓位</span>
+        <span id="minRequiredRisk" onclick="applyMinRisk()" style="font-weight:600;color:#2563eb;">0%</span>
+      </div>
+      <div class="monte-row">
+        <span>✅ 推荐安全风险（取中间）</span>
+        <span id="finalSuggest" onclick="applyRisk()" style="font-weight:700;color:#047857;">0%</span>
+      </div>
+    </div>
+    <button class="btn btn-apply" onclick="applyRisk()">✅ 应用推荐风险到主计算器</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+function formatNumber(num) {
+  return new Intl.NumberFormat('zh-CN', {
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  }).format(num);
+}
+
+function calc(){
+  const totalFund = +document.getElementById('totalFund').value || 0
+  const riskPercent = +document.getElementById('riskPercent').value || 0
+  const maxUseRate = +document.getElementById('maxUseRate').value || 100
+  const entry = +document.getElementById('entry').value || 0
+  const stop = +document.getElementById('stop').value || 0
+  const rrSafe = +document.getElementById('rrSafe').value || 0
+  const rrTarget = +document.getElementById('rrTarget').value || 0
+  const trailPercent = +document.getElementById('trailPercent').value || 0
+  if(!totalFund || !riskPercent || !entry || !stop || entry <= stop){
+    alert('❌ 请输入有效参数，开仓价必须大于止损价'); return;
+  }
+  const riskAmt = totalFund * riskPercent / 100
+  const unitRisk = entry - stop
+  const sizeByRisk = Math.floor(riskAmt / unitRisk)
+  const maxSizeByMoney = Math.floor(totalFund * (maxUseRate/100) / entry)
+  let realSize = Math.min(sizeByRisk, maxSizeByMoney)
+  realSize = Math.max(100, Math.floor(realSize/100)*100)
+  
+  const realCost = realSize * entry
+  const useRate = (realCost/totalFund*100).toFixed(1)
+  const safePrice = entry + rrSafe * unitRisk
+  const targetPrice = entry + rrTarget * unitRisk
+  const targetProfit = realSize * rrTarget * unitRisk
+  const lockPercent = 100 - trailPercent;
+  const trailPrice = entry + (targetPrice-entry)*lockPercent/100;
+  const trailProfit = targetProfit*lockPercent/100;
+
+  document.getElementById('res-cost').textContent = '¥' + formatNumber(realCost)
+  document.getElementById('res-size').textContent = realSize.toLocaleString() + '股'
+  document.getElementById('res-risk').textContent = '¥' + formatNumber(riskAmt)
+  document.getElementById('res-risk-percent').textContent = riskPercent.toFixed(2)+'%'
+  
+  document.getElementById('res-safe-badge').textContent = rrSafe+':1'
+  document.getElementById('res-safe-price').textContent = '¥'+formatNumber(safePrice)
+  document.getElementById('res-safe-change').textContent = '+' + ((safePrice-entry)/entry*100).toFixed(2)+'%'
+  
+  document.getElementById('res-target-badge').textContent = rrTarget+':1'
+  document.getElementById('res-target-price').textContent = '¥'+formatNumber(targetPrice)
+  document.getElementById('res-target-profit').textContent = '¥'+formatNumber(targetProfit)
+  document.getElementById('res-target-change').textContent = '+' + ((targetPrice-entry)/entry*100).toFixed(2)+'%'
+  
+  document.getElementById('res-trail-badge').textContent = trailPercent+'%'
+  document.getElementById('res-trail-price').textContent = '¥'+formatNumber(trailPrice)
+  document.getElementById('res-trail-profit').textContent = '¥'+formatNumber(trailProfit)
+  document.getElementById('res-lock-percent').textContent = lockPercent+'%'
+  
+  document.getElementById('res-unit-risk').textContent = '¥'+formatNumber(unitRisk)
+  document.getElementById('res-stop-ampl').textContent = '-' + (unitRisk/entry*100).toFixed(2)+'%'
+  document.getElementById('res-util').textContent = useRate+'%'
+  
+  document.getElementById('resultArea').style.display = 'block'
+}
+
+// ==============================
+// 🔥 逆向风控推算引擎（双重约束）
+// ==============================
+function runSmartRisk() {
+  const total = +document.getElementById('totalFund').value || 1000000;
+  const trades = +document.getElementById('tradeCount').value || 60;
+  const maxDrawLimit = +document.getElementById('maxDrawdown').value / 100 || 0.2;
+  const targetYear = +document.getElementById('targetYearReturn').value / 100 || 0.5;
+  const winRate = +document.getElementById('winRate').value / 100 || 0.3;
+  const rr = +document.getElementById('rrRisk').value || 6;
+
+  // 1. 标准凯利 1/12
+  const lose = 1 - winRate;
+  let kelly = (winRate * rr - lose) / rr;
+  kelly = Math.max(0, kelly);
+  const kelly112 = kelly * (1 / 12);
+
+  // 2. 回撤不超限的最大风险
+  let low = 0, high = 0.1, maxSafe = 0;
+  for (let i=0;i<20;i++) {
+    const mid = (low+high)/2;
+    const dd = simulateDrawdown(total,trades,mid,winRate,rr,1500);
+    if (dd <= maxDrawLimit*1.02) { maxSafe=mid; low=mid; } else { high=mid; }
+  }
+
+  // 3. 达成目标所需最小风险
+  let minRequired = 0.001;
+  for (let r=0.001;r<=0.1;r+=0.001) {
+    const expect = (winRate*rr - lose)*r;
+    const totalRet = (1+expect)**trades - 1;
+    if (totalRet >= targetYear*0.95) { minRequired=r; break; }
+  }
+
+  // 4. 推荐值
+  const final = Math.max(minRequired, Math.min(maxSafe, kelly112));
+
+  // 显示
+  document.getElementById('kellySuggest').textContent = (kelly112*100).toFixed(2)+'%';
+  document.getElementById('maxSafeRisk').textContent = (maxSafe*100).toFixed(2)+'%';
+  document.getElementById('minRequiredRisk').textContent = (minRequired*100).toFixed(2)+'%';
+  document.getElementById('finalSuggest').textContent = (final*100).toFixed(2)+'%';
+  document.getElementById('riskResult').style.display='block';
+}
+
+// 蒙特卡洛模拟
+function simulateDrawdown(total, trades, risk, win, rr, sims) {
+  let sum=0;
+  for(let s=0;s<sims;s++){
+    let eq=total,peak=eq,dd=0;
+    for(let i=0;i<trades;i++){
+      const bet=eq*risk;
+      Math.random()<win ? eq+=bet*rr : eq-=bet;
+      peak=Math.max(peak,eq);
+      dd=Math.max(dd,1-eq/peak);
+    }
+    sum+=dd;
+  }
+  return sum/sims;
+}
+
+// ==============================
+// ✅ 三个一键应用函数（全部联动）
+// ==============================
+function applyRisk() {
+  const v=document.getElementById('finalSuggest').textContent.replace('%','');
+  document.getElementById('riskPercent').value=parseFloat(v);
+  alert('✅ 已应用推荐风险：'+v+'%');
+  calc();
+}
+function applyMaxRisk() {
+  const v=document.getElementById('maxSafeRisk').textContent.replace('%','');
+  document.getElementById('riskPercent').value=parseFloat(v);
+  alert('✅ 已应用回撤最大允许风险：'+v+'%');
+  calc();
+}
+function applyMinRisk() {
+  const v=document.getElementById('minRequiredRisk').textContent.replace('%','');
+  document.getElementById('riskPercent').value=parseFloat(v);
+  alert('✅ 已应用目标最低所需风险：'+v+'%');
+  calc();
+}
+</script>
+</body>
+</html>
