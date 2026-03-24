@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>专业仓位风险计算器（原功能完整保留）</title>
+<title>专业仓位风险计算器</title>
 <style>
 *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
 body{margin:0;padding:20px;background:#f5f7fa;color:#1f2937}
@@ -88,9 +88,8 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
   white-space:nowrap;
 }
 .detail-val.red { color:#ef4444; }
-.detail-val.blue { color:#2563eb; }
+.detail-val.blue { color:#3b82f6; }
 .result-detail { background:#fff;border-radius:16px;padding:16px;border:1px solid #e9ecef; }
-
 .risk-result-card {
   background:#f0fdf4;
   border:1px solid #16a34a;
@@ -104,7 +103,6 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
   padding:6px 0;
   font-size:14px;
 }
-/* 加鼠标手型 */
 .monte-row span:last-child {
   cursor: pointer;
   padding: 2px 6px;
@@ -120,7 +118,6 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
 <body>
 <div class="container">
 <h1>仓位风险计算器</h1>
-
 <div class="section">
   <h2>基础参数</h2>
   <div class="form-item" style="margin-bottom:12px">
@@ -148,7 +145,6 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
     </div>
   </div>
 </div>
-
 <div class="section">
   <h2>盈亏比设置（可自定义）</h2>
   <div class="form-row">
@@ -163,18 +159,15 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
     </div>
   </div>
 </div>
-
 <div class="section">
   <h2>盈利保护（回撤止盈）</h2>
   <div class="form-item">
-    <label>利润回撤保护 %</label>
+    <label>最终锁定涨幅</label>
     <input type="number" id="trailPercent" value="20">
     <div class="tip">达到目标后，利润回撤此比例即止盈</div>
   </div>
 </div>
-
 <button class="btn" onclick="calc()">⚡ 计算仓位数据</button>
-
 <div class="result-container" id="resultArea" style="display:none">
   <div class="result-cards">
     <div class="card purple">
@@ -192,7 +185,6 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
       <div class="card-sub">占账户 <span id="res-risk-percent">0%</span></div>
     </div>
   </div>
-
   <div class="detail-card orange">
     <div class="detail-header">
       <div class="detail-title">脱离成本区 <span class="detail-badge badge-orange" id="res-safe-badge">5:1</span></div>
@@ -200,7 +192,6 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
     <div class="detail-row"><span class="detail-label">目标价格</span><span class="detail-val" id="res-safe-price">¥0.00</span></div>
     <div class="detail-row"><span class="detail-label">目标涨幅</span><span class="detail-val red" id="res-safe-change">+0.00%</span></div>
   </div>
-
   <div class="detail-card red">
     <div class="detail-header">
       <div class="detail-title">目标收益点位 <span class="detail-badge badge-red" id="res-target-badge">10:1</span></div>
@@ -209,24 +200,20 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
     <div class="detail-row"><span class="detail-label">预期收益</span><span class="detail-val red" id="res-target-profit">¥0.00</span></div>
     <div class="detail-row"><span class="detail-label">上涨空间</span><span class="detail-val red" id="res-target-change">+0.00%</span></div>
   </div>
-
   <div class="detail-card blue">
     <div class="detail-header">
       <div class="detail-title">利润保护 <span class="detail-badge badge-blue" id="res-trail-badge">20%</span></div>
     </div>
     <div class="detail-row"><span class="detail-label">保护价格</span><span class="detail-val" id="res-trail-price">¥0.00</span></div>
     <div class="detail-row"><span class="detail-label">锁定利润</span><span class="detail-val red" id="res-trail-profit">¥0.00</span></div>
-    <div class="detail-row"><span class="detail-label">锁定利润比例</span><span class="detail-val red" id="res-lock-percent">0%</span></div>
+    <div class="detail-row"><span class="detail-label">最终锁定涨幅</span><span class="detail-val red" id="res-lock-percent">0%</span></div>
   </div>
-
   <div class="result-detail">
     <div class="detail-row"><span class="detail-label">每股风险</span><span class="detail-val" id="res-unit-risk">¥0.00</span></div>
     <div class="detail-row"><span class="detail-label">止损幅度</span><span class="detail-val red" id="res-stop-ampl">-0.00%</span></div>
     <div class="detail-row"><span class="detail-label">资金利用率</span><span class="detail-val blue" id="res-util">0.00%</span></div>
   </div>
 </div>
-
-<!-- 🔥 逆向风控推算引擎（双重约束） -->
 <div class="section" style="margin-top:32px;">
   <h2>🧠 逆向风控推算引擎（双重约束）</h2>
   <div class="form-row">
@@ -242,7 +229,6 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
     <div class="form-item" style="visibility:hidden;"></div>
   </div>
   <button class="btn btn-risk" onclick="runSmartRisk()">🚀 运行逆向风控计算</button>
-
   <div id="riskResult" style="display:none; margin-top:16px;">
     <div class="risk-result-card">
       <div class="monte-row">
@@ -265,9 +251,7 @@ input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,23
     <button class="btn btn-apply" onclick="applyRisk()">✅ 应用推荐风险到主计算器</button>
   </div>
 </div>
-
 </div>
-
 <script>
 function formatNumber(num) {
   return new Intl.NumberFormat('zh-CN', {
@@ -275,7 +259,6 @@ function formatNumber(num) {
     maximumFractionDigits:2
   }).format(num);
 }
-
 function calc(){
   const totalFund = +document.getElementById('totalFund').value || 0
   const riskPercent = +document.getElementById('riskPercent').value || 0
@@ -303,6 +286,9 @@ function calc(){
   const lockPercent = 100 - trailPercent;
   const trailPrice = entry + (targetPrice-entry)*lockPercent/100;
   const trailProfit = targetProfit*lockPercent/100;
+  
+  // 计算真实锁定涨幅（结合盈亏比 + 回撤条件）
+  const lockRisePercent = ((trailPrice - entry) / entry * 100).toFixed(2);
 
   document.getElementById('res-cost').textContent = '¥' + formatNumber(realCost)
   document.getElementById('res-size').textContent = realSize.toLocaleString() + '股'
@@ -321,7 +307,8 @@ function calc(){
   document.getElementById('res-trail-badge').textContent = trailPercent+'%'
   document.getElementById('res-trail-price').textContent = '¥'+formatNumber(trailPrice)
   document.getElementById('res-trail-profit').textContent = '¥'+formatNumber(trailProfit)
-  document.getElementById('res-lock-percent').textContent = lockPercent+'%'
+  // 显示锁定涨幅
+  document.getElementById('res-lock-percent').textContent = '+'+lockRisePercent+'%'
   
   document.getElementById('res-unit-risk').textContent = '¥'+formatNumber(unitRisk)
   document.getElementById('res-stop-ampl').textContent = '-' + (unitRisk/entry*100).toFixed(2)+'%'
@@ -329,10 +316,6 @@ function calc(){
   
   document.getElementById('resultArea').style.display = 'block'
 }
-
-// ==============================
-// 🔥 逆向风控推算引擎（双重约束）
-// ==============================
 function runSmartRisk() {
   const total = +document.getElementById('totalFund').value || 1000000;
   const trades = +document.getElementById('tradeCount').value || 60;
@@ -340,41 +323,29 @@ function runSmartRisk() {
   const targetYear = +document.getElementById('targetYearReturn').value / 100 || 0.5;
   const winRate = +document.getElementById('winRate').value / 100 || 0.3;
   const rr = +document.getElementById('rrRisk').value || 6;
-
-  // 1. 标准凯利 1/12
   const lose = 1 - winRate;
   let kelly = (winRate * rr - lose) / rr;
   kelly = Math.max(0, kelly);
   const kelly112 = kelly * (1 / 12);
-
-  // 2. 回撤不超限的最大风险
   let low = 0, high = 0.1, maxSafe = 0;
   for (let i=0;i<20;i++) {
     const mid = (low+high)/2;
     const dd = simulateDrawdown(total,trades,mid,winRate,rr,1500);
     if (dd <= maxDrawLimit*1.02) { maxSafe=mid; low=mid; } else { high=mid; }
   }
-
-  // 3. 达成目标所需最小风险
   let minRequired = 0.001;
   for (let r=0.001;r<=0.1;r+=0.001) {
     const expect = (winRate*rr - lose)*r;
     const totalRet = (1+expect)**trades - 1;
     if (totalRet >= targetYear*0.95) { minRequired=r; break; }
   }
-
-  // 4. 推荐值
   const final = Math.max(minRequired, Math.min(maxSafe, kelly112));
-
-  // 显示
   document.getElementById('kellySuggest').textContent = (kelly112*100).toFixed(2)+'%';
   document.getElementById('maxSafeRisk').textContent = (maxSafe*100).toFixed(2)+'%';
   document.getElementById('minRequiredRisk').textContent = (minRequired*100).toFixed(2)+'%';
   document.getElementById('finalSuggest').textContent = (final*100).toFixed(2)+'%';
   document.getElementById('riskResult').style.display='block';
 }
-
-// 蒙特卡洛模拟
 function simulateDrawdown(total, trades, risk, win, rr, sims) {
   let sum=0;
   for(let s=0;s<sims;s++){
@@ -389,10 +360,6 @@ function simulateDrawdown(total, trades, risk, win, rr, sims) {
   }
   return sum/sims;
 }
-
-// ==============================
-// ✅ 三个一键应用函数（全部联动）
-// ==============================
 function applyRisk() {
   const v=document.getElementById('finalSuggest').textContent.replace('%','');
   document.getElementById('riskPercent').value=parseFloat(v);
